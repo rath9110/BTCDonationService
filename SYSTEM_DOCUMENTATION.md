@@ -47,6 +47,33 @@ The architecture is built on five core pillars that ensure the system is **uncol
 - **Blockchain:** Local EVM (Simulated via Hardhat).
 - **Contracts:** Solidity 0.8.24 (OpenZeppelin base).
 - **Verification:** 100% test coverage for core logic and end-to-end simulations for every pillar.
+- **Tools:** Hardhat, Ethers.js, Chai.
+
+---
+
+## Full Architectural System Flow
+The following flow describes how a user interacts with the system and how the protocol maintains its integrity.
+
+### Phase 1: User Entry (Identity & Trust)
+1.  **Soulbound Minting**: A new user generates a `SocialRecoveryWallet`. They mint a `SoulboundID` (SBT) which serves as their permanent, non-transferable reputation anchor.
+2.  **Guardian Selection**: The user selects 3-5 trusted peers ("Guardians") from their social graph. These Guardians can help recover the wallet if keys are lost, replacing centralized "Forgot Password" flows.
+
+### Phase 2: Transaction Lifecycle (Privacy & Compliance)
+3.  **Compliance Check**: Before initiating a high-value action (e.g., a large donation or loan request), the user generates a Zero-Knowledge Proof (ZKP) locally on their device.
+4.  **The Gate**: The `ComplianceGate.sol` contract verifies this proof. It confirms the user is "Good" (e.g., not sanctioned, over 18) without ever revealing *who* the user is.
+5.  **Stateless Execution**: To minimize gas costs and phone battery usage, the user submits only a tiny 32-byte hash (Commitment) to `ProvingHubVerifier.sol`. A powerful off-chain "Hub" sees this commitment, generates the heavy cryptographic proof, and submits it to the chain on the user's behalf.
+
+### Phase 3: Network Security (The "Honeycomb")
+6.  **Receipt Generation**: Every completed transaction generates a "Receipt" hash in the `AuditManager` contract.
+7.  **Validator Scrutiny**: Decentralized Auditors (Validators) stake `ReputationTokens` to review these receipts for irregularities.
+8.  **The "Trapdoor" Test**: The system (via an automated agent) randomly injects "fake" or "invalid" receipts into the pool—known as **Trapdoors**.
+    - If a Validator blindly approves a Trapdoor receipt (lazy auditing), they are instantly **slashed** (100% of their stake is burned).
+    - This forces every Validator to be mathematically honest, as the cost of cheating is always greater than the potential gain.
+
+### Phase 4: The Sustainability Loop
+9.  **Fee Collection**: A small protocol fee (e.g., 0.5%) is collected from every successful transaction yield.
+10. **Treasury Allocation**: These fees are sent to the `SustainabilityTreasury.sol`.
+11. **Automated Maintenance**: The funds are not held by a company. Instead, they are programmatically available as bounties for developers who submit verified patches or improvements to the protocol, ensuring the system evolves and maintains itself indefinitely.
 
 ## Running the Protocol
 To verify the entire system, you can run the following test suites:
